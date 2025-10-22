@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EventCard, { Event } from "@/components/EventCard";
 import CategoryFilter from "@/components/CategoryFilter";
+import DatePriceFilter from "@/components/DatePriceFilter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Ticket, Search, Settings, CalendarDays } from "lucide-react";
+import { parseISO, isWithinInterval } from "date-fns";
 
 // Mock event data
 const mockEvents: Event[] = [
@@ -86,6 +88,8 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [show21Plus, setShow21Plus] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
 
   const filteredEvents = mockEvents.filter((event) => {
     const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
@@ -94,7 +98,19 @@ const Dashboard = () => {
       searchQuery === "" ||
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matches21Plus && matchesSearch;
+    
+    // Date filter
+    const eventDate = parseISO(event.date.replace(/^(\w+) (\d+), (\d+)$/, "$3-$1-$2").replace("Nov", "11").replace("Dec", "12"));
+    const matchesDate = 
+      (!dateRange.from && !dateRange.to) ||
+      (dateRange.from && dateRange.to && isWithinInterval(eventDate, { start: dateRange.from, end: dateRange.to })) ||
+      (dateRange.from && !dateRange.to && eventDate >= dateRange.from);
+    
+    // Price filter
+    const eventPrice = event.price === "Free" ? 0 : parseInt(event.price.replace("$", ""));
+    const matchesPrice = eventPrice >= priceRange[0] && eventPrice <= priceRange[1];
+    
+    return matchesCategory && matches21Plus && matchesSearch && matchesDate && matchesPrice;
   });
 
   return (
@@ -154,12 +170,21 @@ const Dashboard = () => {
         </div>
 
         {/* Filters */}
-        <CategoryFilter
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          show21Plus={show21Plus}
-          onToggle21Plus={() => setShow21Plus(!show21Plus)}
-        />
+        <div className="space-y-4">
+          <CategoryFilter
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            show21Plus={show21Plus}
+            onToggle21Plus={() => setShow21Plus(!show21Plus)}
+          />
+          
+          <DatePriceFilter
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            priceRange={priceRange}
+            onPriceRangeChange={setPriceRange}
+          />
+        </div>
 
         {/* Events Grid */}
         <div>
