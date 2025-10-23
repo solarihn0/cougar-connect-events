@@ -1,41 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, MapPin, QrCode } from "lucide-react";
-
-interface Ticket {
-  id: string;
-  eventTitle: string;
-  date: string;
-  time: string;
-  location: string;
-  seatNumber: string;
-  qrCode: string;
-}
-
-const mockTickets: Ticket[] = [
-  {
-    id: "1",
-    eventTitle: "Charleston Cougars vs Tigers - Basketball",
-    date: "Nov 15, 2025",
-    time: "7:00 PM",
-    location: "TD Arena, Charleston, SC",
-    seatNumber: "Section A, Row 5, Seat 12",
-    qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TICKET-001",
-  },
-  {
-    id: "2",
-    eventTitle: "Jazz Night at the Pour House",
-    date: "Nov 18, 2025",
-    time: "8:30 PM",
-    location: "The Pour House, Charleston, SC",
-    seatNumber: "General Admission",
-    qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TICKET-002",
-  },
-];
+import { ArrowLeft, Calendar, MapPin, QrCode, TicketX } from "lucide-react";
+import { useTickets } from "@/context/TicketContext";
 
 const MyTickets = () => {
   const navigate = useNavigate();
+  const { tickets } = useTickets();
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,9 +29,9 @@ const MyTickets = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {mockTickets.length > 0 ? (
+        {tickets.length > 0 ? (
           <div className="space-y-6">
-            {mockTickets.map((ticket) => (
+            {tickets.map((ticket) => (
               <Card key={ticket.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
                   <CardTitle className="text-xl">{ticket.eventTitle}</CardTitle>
@@ -84,13 +55,24 @@ const MyTickets = () => {
                           <p className="text-muted-foreground">{ticket.location}</p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <QrCode className="w-5 h-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-semibold">Seat</p>
-                          <p className="text-muted-foreground">{ticket.seatNumber}</p>
+                      {ticket.seatNumber && (
+                        <div className="flex items-start gap-3">
+                          <QrCode className="w-5 h-5 text-primary mt-0.5" />
+                          <div>
+                            <p className="font-semibold">Seat</p>
+                            <p className="text-muted-foreground">{ticket.seatNumber}</p>
+                          </div>
                         </div>
-                      </div>
+                      )}
+                      {ticket.quantity && (
+                        <div className="flex items-start gap-3">
+                          <QrCode className="w-5 h-5 text-primary mt-0.5" />
+                          <div>
+                            <p className="font-semibold">Quantity</p>
+                            <p className="text-muted-foreground">{ticket.quantity} ticket(s)</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col items-center justify-center bg-muted rounded-lg p-6">
@@ -112,12 +94,16 @@ const MyTickets = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg mb-4">You don't have any tickets yet</p>
-            <Button variant="gold" onClick={() => navigate("/")}>
-              Browse Events
-            </Button>
-          </div>
+          <Card>
+            <CardContent className="p-12 text-center">
+              <TicketX className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">No Tickets Yet</h3>
+              <p className="text-muted-foreground mb-6">Start exploring events and purchase your first ticket!</p>
+              <Button variant="gold" onClick={() => navigate("/")}>
+                Browse Events
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

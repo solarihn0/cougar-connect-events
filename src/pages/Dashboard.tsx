@@ -1,95 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import EventCard, { Event } from "@/components/EventCard";
+import EventCard from "@/components/EventCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import DatePriceFilter from "@/components/DatePriceFilter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Ticket, Search, Settings, CalendarDays } from "lucide-react";
-import { parseISO, isWithinInterval } from "date-fns";
-
-// Mock event data
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    title: "Charleston Cougars vs Tigers - Basketball",
-    category: "Sport",
-    subcategory: "CofC Athletics - Men's Basketball",
-    date: "Nov 15, 2025",
-    time: "7:00 PM",
-    location: "TD Arena, Charleston, SC",
-    price: "$25",
-    image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&h=400&fit=crop",
-    isFeatured: true,
-  },
-  {
-    id: "2",
-    title: "Jazz Night at the Pour House",
-    category: "Music",
-    subcategory: "Classical & Jazz",
-    date: "Nov 18, 2025",
-    time: "8:30 PM",
-    location: "The Pour House, Charleston, SC",
-    price: "$15",
-    image: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=400&fit=crop",
-    isAgeRestricted: true,
-  },
-  {
-    id: "3",
-    title: "Craft Beer & Food Festival",
-    category: "Lifestyle",
-    subcategory: "Food & Drink",
-    date: "Nov 20, 2025",
-    time: "2:00 PM",
-    location: "Waterfront Park, Charleston, SC",
-    price: "$40",
-    image: "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=800&h=400&fit=crop",
-    isAgeRestricted: true,
-    isFeatured: true,
-  },
-  {
-    id: "4",
-    title: "Morning Yoga on the Beach",
-    category: "Lifestyle",
-    subcategory: "Health & Wellness",
-    date: "Nov 16, 2025",
-    time: "6:30 AM",
-    location: "Folly Beach, SC",
-    price: "Free",
-    image: "https://images.unsplash.com/photo-1588286840104-8957b019727f?w=800&h=400&fit=crop",
-  },
-  {
-    id: "5",
-    title: "The Indie Rockers - Live Concert",
-    category: "Music",
-    subcategory: "Concerts & Live Shows",
-    date: "Nov 22, 2025",
-    time: "9:00 PM",
-    location: "Music Farm, Charleston, SC",
-    price: "$30",
-    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=400&fit=crop",
-  },
-  {
-    id: "6",
-    title: "Women's Soccer Championship",
-    category: "Sport",
-    subcategory: "CofC Athletics - Women's Soccer",
-    date: "Nov 19, 2025",
-    time: "5:00 PM",
-    location: "Ralph Muldrow Field, Charleston, SC",
-    price: "$10",
-    image: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=400&fit=crop",
-    isFeatured: true,
-  },
-];
-
+import { Badge } from "@/components/ui/badge";
+import { Ticket, Search, Settings, CalendarDays, TicketX } from "lucide-react";
+import { mockEvents } from "@/lib/events";
+import { useTickets } from "@/context/TicketContext";
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { tickets } = useTickets();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [show21Plus, setShow21Plus] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
+  
+  const maxEventPrice = Math.max(...mockEvents.map(e => {
+    const priceStr = e.price.replace('$', '');
+    return priceStr === 'Free' ? 0 : parseInt(priceStr);
+  }));
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxEventPrice]);
 
   const filteredEvents = mockEvents.filter((event) => {
     const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
@@ -99,16 +31,21 @@ const Dashboard = () => {
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.location.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Date filter
-    const eventDate = parseISO(event.date.replace(/^(\w+) (\d+), (\d+)$/, "$3-$1-$2").replace("Nov", "11").replace("Dec", "12"));
-    const matchesDate = 
-      (!dateRange.from && !dateRange.to) ||
-      (dateRange.from && dateRange.to && isWithinInterval(eventDate, { start: dateRange.from, end: dateRange.to })) ||
-      (dateRange.from && !dateRange.to && eventDate >= dateRange.from);
+    // Date filtering
+    const eventDate = new Date(event.date);
+    let matchesDate = true;
     
-    // Price filter
+    if (dateRange.from && !dateRange.to) {
+      // Single date selected - show events from this date onwards
+      matchesDate = eventDate >= dateRange.from;
+    } else if (dateRange.from && dateRange.to) {
+      // Date range selected
+      matchesDate = eventDate >= dateRange.from && eventDate <= dateRange.to;
+    }
+    
+    // Price filtering
     const eventPrice = event.price === "Free" ? 0 : parseInt(event.price.replace("$", ""));
-    const matchesPrice = eventPrice >= priceRange[0] && eventPrice <= priceRange[1];
+    const matchesPrice = eventPrice <= priceRange[1];
     
     return matchesCategory && matches21Plus && matchesSearch && matchesDate && matchesPrice;
   });
@@ -130,9 +67,18 @@ const Dashboard = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate("/my-tickets")}
-                className="text-primary-foreground hover:bg-primary-foreground/10"
+                className="text-primary-foreground hover:bg-primary-foreground/10 relative"
               >
-                <CalendarDays className="w-5 h-5" />
+                {tickets.length > 0 ? (
+                  <>
+                    <CalendarDays className="w-5 h-5" />
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                      {tickets.length}
+                    </Badge>
+                  </>
+                ) : (
+                  <TicketX className="w-5 h-5" />
+                )}
               </Button>
               <Button
                 variant="ghost"
@@ -183,6 +129,7 @@ const Dashboard = () => {
             onDateRangeChange={setDateRange}
             priceRange={priceRange}
             onPriceRangeChange={setPriceRange}
+            maxPrice={maxEventPrice}
           />
         </div>
 

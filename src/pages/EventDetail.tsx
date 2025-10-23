@@ -7,34 +7,32 @@ import { useState } from "react";
 import SeatingMap, { Section } from "@/components/SeatingMap";
 import GeneralAdmission from "@/components/GeneralAdmission";
 import { toast } from "sonner";
+import { getEventById } from "@/lib/events";
+import { useTickets } from "@/context/TicketContext";
 
 const EventDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addTickets } = useTickets();
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState<{ sectionId: string; seatId: string }[]>([]);
   const [generalAdmissionCount, setGeneralAdmissionCount] = useState(0);
 
-  // Mock event data - in real app, fetch by ID
-  const event = {
-    id,
-    title: "Charleston Cougars vs Tigers - Basketball",
-    category: "Sport",
-    subcategory: "CofC Athletics - Men's Basketball",
-    date: "Nov 15, 2025",
-    time: "7:00 PM",
-    location: "TD Arena, Charleston, SC",
-    price: "$25",
-    image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200&h=600&fit=crop",
-    description:
-      "Join us for an exciting basketball matchup as the Charleston Cougars take on the Tigers! Experience the energy and excitement of college basketball at its finest. This is a must-see event for all sports fans in Charleston.",
-    capacity: "2,500 seats",
-    isAgeRestricted: false,
-    hasReservedSeating: true, // This determines if we show seating map or general admission
-  };
+  const event = getEventById(id || "");
 
-  // Mock venue sections and seats for arena events
-  const venueSections: Section[] = [
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Event Not Found</h1>
+          <Button onClick={() => navigate("/")}>Back to Events</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Mock venue sections for events with reserved seating
+  const venueSections: Section[] = event.hasReservedSeating ? [
     {
       id: "section-a",
       name: "Section A",
@@ -91,7 +89,7 @@ const EventDetail = () => {
         y: 350 + Math.floor(i / 8) * 25,
       })),
     },
-  ];
+  ] : [];
 
   const handleSeatSelect = (sectionId: string, seatId: string) => {
     setSelectedSeats(prev => {
@@ -110,7 +108,7 @@ const EventDetail = () => {
         return total + (section?.price || 0);
       }, 0);
     } else {
-      const basePrice = parseInt(event.price.replace("$", ""));
+      const basePrice = parseInt(event.price.replace("$", "") || "0");
       return basePrice * generalAdmissionCount;
     }
   };
@@ -124,9 +122,41 @@ const EventDetail = () => {
       toast.error("Please select at least one ticket");
       return;
     }
-    
-    toast.info("Proceeding to payment... Payment integration required");
-    // In real app: redirect to Stripe payment
+
+    // Generate tickets
+    const newTickets = event.hasReservedSeating
+      ? selectedSeats.map((selected, idx) => {
+          const section = venueSections.find(s => s.id === selected.sectionId);
+          const seat = section?.seats.find(s => s.id === selected.seatId);
+          return {
+            id: `${Date.now()}-${idx}`,
+            eventId: event.id,
+            eventTitle: event.title,
+            date: event.date,
+            time: event.time,
+            location: event.location,
+            seatNumber: seat ? `${section?.name}, Row ${seat.row}, Seat ${seat.number}` : 'Reserved',
+            qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TICKET-${event.id}-${selected.seatId}-${Date.now()}`,
+            purchaseDate: new Date().toISOString(),
+          };
+        })
+      : [{
+          id: `${Date.now()}`,
+          eventId: event.id,
+          eventTitle: event.title,
+          date: event.date,
+          time: event.time,
+          location: event.location,
+          quantity: generalAdmissionCount,
+          qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TICKET-${event.id}-GA-${Date.now()}`,
+          purchaseDate: new Date().toISOString(),
+        }];
+
+    addTickets(newTickets);
+
+    toast.success(`🎉 Tickets purchased! ${event.hasReservedSeating ? selectedSeats.length : generalAdmissionCount} ticket(s) added to My Tickets`);
+
+    setTimeout(() => navigate("/my-tickets"), 1500);
   };
 
   return (
@@ -161,9 +191,8 @@ const EventDetail = () => {
           <div className="absolute bottom-6 left-6 right-6">
             <div className="flex items-start justify-between">
               <div>
-                <Badge className="mb-3">{event.category}</Badge>
+                <Badge className="mb-3">{event.category} - {event.subcategory}</Badge>
                 <h1 className="text-4xl font-bold text-white mb-2">{event.title}</h1>
-                <p className="text-white/90">{event.subcategory}</p>
               </div>
               <Button
                 variant="ghost"
@@ -210,8 +239,8 @@ const EventDetail = () => {
                   <div className="flex items-start gap-3">
                     <Users className="w-5 h-5 text-primary mt-1" />
                     <div>
-                      <p className="font-semibold">Capacity</p>
-                      <p className="text-muted-foreground">{event.capacity}</p>
+                      <p className="font-semibold">Ticket Type</p>
+                      <p className="text-muted-foreground">{event.hasReservedSeating ? 'Reserved Seating' : 'General Admission'}</p>
                     </div>
                   </div>
                 </div>
@@ -227,9 +256,10 @@ const EventDetail = () => {
               />
             ) : (
               <GeneralAdmission
-                price={parseInt(event.price.replace("$", ""))}
+                price={parseInt(event.price.replace("$", "") || "0")}
                 ticketCount={generalAdmissionCount}
                 onTicketCountChange={setGeneralAdmissionCount}
+                maxTickets={event.maxTickets || 10}
               />
             )}
           </div>
@@ -285,7 +315,7 @@ const EventDetail = () => {
                 )}
 
                 <div className="pt-4 border-t space-y-2 text-sm text-muted-foreground">
-                  <p>• Tickets are non-refundable</p>
+                  <p>• Tickets are final sale</p>
                   <p>• Digital tickets sent via email</p>
                   <p>• Valid photo ID required at entry</p>
                 </div>
