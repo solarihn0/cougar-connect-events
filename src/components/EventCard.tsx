@@ -4,11 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
+export type EventCategory = "Big Arena" | "Selected Seats" | "Max Capacity";
+
 export interface Event {
   id: string;
   title: string;
   category: "Music" | "Sport" | "Lifestyle";
   subcategory: string;
+  eventCategory: EventCategory;
   date: string;
   time: string;
   location: string;
@@ -16,6 +19,8 @@ export interface Event {
   image: string;
   isAgeRestricted?: boolean;
   isFeatured?: boolean;
+  capacity?: number;
+  ticketsSold?: number;
 }
 
 interface EventCardProps {
@@ -67,12 +72,19 @@ const EventCard = ({ event }: EventCardProps) => {
           <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
             {event.title}
           </h3>
-          <Badge variant="outline" className={getCategoryColor(event.category)}>
-            {event.category}
-          </Badge>
+          <div className="flex flex-col gap-1">
+            <Badge variant="outline" className={getCategoryColor(event.category)}>
+              {event.category}
+            </Badge>
+          </div>
         </div>
 
-        <p className="text-sm text-muted-foreground">{event.subcategory}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm text-muted-foreground">{event.subcategory}</p>
+          <Badge variant="secondary" className="text-xs">
+            {event.eventCategory}
+          </Badge>
+        </div>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -94,12 +106,24 @@ const EventCard = ({ event }: EventCardProps) => {
         <div className="flex items-center gap-2">
           <Tag className="w-4 h-4 text-primary" />
           <span className="font-bold text-lg text-primary">{event.price}</span>
+          {event.eventCategory === "Max Capacity" && event.capacity && event.ticketsSold !== undefined && (
+            <span className="text-xs text-muted-foreground">
+              ({event.ticketsSold}/{event.capacity})
+            </span>
+          )}
         </div>
-        <Button variant="gold" size="sm" onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/event/${event.id}`);
-        }}>
-          Get Tickets
+        <Button 
+          variant="gold" 
+          size="sm" 
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/event/${event.id}`);
+          }}
+          disabled={event.eventCategory === "Max Capacity" && event.capacity && event.ticketsSold && event.ticketsSold >= event.capacity}
+        >
+          {event.eventCategory === "Max Capacity" && event.capacity && event.ticketsSold && event.ticketsSold >= event.capacity 
+            ? "Sold Out" 
+            : "Get Tickets"}
         </Button>
       </CardFooter>
     </Card>

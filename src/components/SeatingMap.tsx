@@ -26,9 +26,10 @@ interface SeatingMapProps {
   onSeatSelect: (sectionId: string, seatId: string) => void;
   selectedSeats: { sectionId: string; seatId: string }[];
   maxSeats?: number;
+  showStage?: boolean;
 }
 
-const SeatingMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: SeatingMapProps) => {
+const SeatingMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10, showStage = false }: SeatingMapProps) => {
   const [hoveredSeat, setHoveredSeat] = useState<string | null>(null);
 
   const isSeatSelected = (sectionId: string, seatId: string) => {
@@ -47,8 +48,16 @@ const SeatingMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: Se
   };
 
   const getSeatColor = (sectionId: string, seat: Seat) => {
-    if (!seat.isAvailable) return "fill-muted stroke-muted-foreground/20";
-    if (isSeatSelected(sectionId, seat.id)) return "fill-secondary stroke-secondary-foreground";
+    // Color scheme: Selected = yellow, Sold = grey, Free = green
+    if (!seat.isAvailable) {
+      // Sold/unavailable = grey
+      return "fill-muted stroke-muted-foreground/20";
+    }
+    if (isSeatSelected(sectionId, seat.id)) {
+      // Selected = yellow (secondary gold)
+      return "fill-secondary stroke-secondary-foreground";
+    }
+    // Free = green
     return "fill-green-500 stroke-green-700 hover:fill-green-400 cursor-pointer";
   };
 
@@ -62,19 +71,19 @@ const SeatingMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: Se
           </p>
         </CardHeader>
         <CardContent>
-          {/* Legend */}
+          {/* Legend - Color scheme: Free = green, Selected = yellow, Sold = grey */}
           <div className="flex flex-wrap gap-4 mb-6 pb-4 border-b">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-green-500 border border-green-700"></div>
-              <span className="text-sm">Available</span>
+              <span className="text-sm font-medium">Free</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-secondary border border-secondary-foreground"></div>
-              <span className="text-sm">Selected</span>
+              <span className="text-sm font-medium">Selected</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-muted border border-muted-foreground/20"></div>
-              <span className="text-sm">Taken</span>
+              <span className="text-sm font-medium">Sold</span>
             </div>
           </div>
 
@@ -85,25 +94,63 @@ const SeatingMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: Se
               className="w-full max-w-4xl mx-auto"
               style={{ minWidth: "600px" }}
             >
-              {/* Stage */}
-              <rect
-                x="200"
-                y="50"
-                width="400"
-                height="60"
-                fill="hsl(var(--primary))"
-                rx="8"
-              />
-              <text
-                x="400"
-                y="85"
-                textAnchor="middle"
-                fill="hsl(var(--primary-foreground))"
-                fontSize="20"
-                fontWeight="bold"
-              >
-                STAGE
-              </text>
+              {/* Stage or Court */}
+              {showStage ? (
+                // Stage for concerts/theater (positioned on left/west side)
+                <>
+                  <rect
+                    x="50"
+                    y="150"
+                    width="120"
+                    height="200"
+                    fill="hsl(var(--primary))"
+                    rx="8"
+                  />
+                  <text
+                    x="110"
+                    y="260"
+                    textAnchor="middle"
+                    fill="hsl(var(--primary-foreground))"
+                    fontSize="24"
+                    fontWeight="bold"
+                    transform="rotate(-90 110 260)"
+                  >
+                    STAGE
+                  </text>
+                </>
+              ) : (
+                // Court for sports (centered)
+                <>
+                  <rect
+                    x="300"
+                    y="200"
+                    width="200"
+                    height="150"
+                    fill="hsl(var(--primary)/0.15)"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="3"
+                    rx="4"
+                  />
+                  <line
+                    x1="400"
+                    y1="200"
+                    x2="400"
+                    y2="350"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="2"
+                  />
+                  <text
+                    x="400"
+                    y="285"
+                    textAnchor="middle"
+                    fill="hsl(var(--primary))"
+                    fontSize="20"
+                    fontWeight="bold"
+                  >
+                    COURT
+                  </text>
+                </>
+              )}
 
               {/* Sections and Seats */}
               {sections.map((section) => (

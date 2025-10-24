@@ -8,6 +8,8 @@ interface GeneralAdmissionProps {
   onTicketCountChange: (count: number) => void;
   maxTickets?: number;
   availableTickets?: number;
+  capacity?: number;
+  ticketsSold?: number;
 }
 
 const GeneralAdmission = ({
@@ -16,6 +18,8 @@ const GeneralAdmission = ({
   onTicketCountChange,
   maxTickets = 10,
   availableTickets = 100,
+  capacity,
+  ticketsSold,
 }: GeneralAdmissionProps) => {
   const handleIncrease = () => {
     if (ticketCount < maxTickets && ticketCount < availableTickets) {

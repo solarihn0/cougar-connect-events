@@ -6,9 +6,17 @@ import { ArrowLeft, Calendar, Clock, MapPin, Users, Heart } from "lucide-react";
 import { useState } from "react";
 import SeatingMap, { Section } from "@/components/SeatingMap";
 import GeneralAdmission from "@/components/GeneralAdmission";
+import CapacityDisplay from "@/components/CapacityDisplay";
 import { toast } from "sonner";
 import { getEventById } from "@/lib/events";
 import { useTickets } from "@/context/TicketContext";
+import {
+  getTDArenaCourtLayout,
+  getTDArenaConcertLayout,
+  getTheaterLayout,
+  getClubLayout,
+  getFestivalLayout,
+} from "@/lib/venueLayouts";
 
 const EventDetail = () => {
   const { id } = useParams();
@@ -31,65 +39,29 @@ const EventDetail = () => {
     );
   }
 
-  // Mock venue sections for events with reserved seating
-  const venueSections: Section[] = event.hasReservedSeating ? [
-    {
-      id: "section-a",
-      name: "Section A",
-      price: 45,
-      color: "#FFD700",
-      seats: Array.from({ length: 30 }, (_, i) => ({
-        id: `a-${i}`,
-        row: String.fromCharCode(65 + Math.floor(i / 6)),
-        number: (i % 6) + 1,
-        isAvailable: Math.random() > 0.3,
-        x: 150 + (i % 6) * 25,
-        y: 180 + Math.floor(i / 6) * 25,
-      })),
-    },
-    {
-      id: "section-b",
-      name: "Section B",
-      price: 35,
-      color: "#C0C0C0",
-      seats: Array.from({ length: 30 }, (_, i) => ({
-        id: `b-${i}`,
-        row: String.fromCharCode(65 + Math.floor(i / 6)),
-        number: (i % 6) + 1,
-        isAvailable: Math.random() > 0.3,
-        x: 500 + (i % 6) * 25,
-        y: 180 + Math.floor(i / 6) * 25,
-      })),
-    },
-    {
-      id: "section-c",
-      name: "Section C",
-      price: 25,
-      color: "#CD7F32",
-      seats: Array.from({ length: 40 }, (_, i) => ({
-        id: `c-${i}`,
-        row: String.fromCharCode(65 + Math.floor(i / 8)),
-        number: (i % 8) + 1,
-        isAvailable: Math.random() > 0.3,
-        x: 150 + (i % 8) * 25,
-        y: 350 + Math.floor(i / 8) * 25,
-      })),
-    },
-    {
-      id: "section-d",
-      name: "Section D",
-      price: 25,
-      color: "#CD7F32",
-      seats: Array.from({ length: 40 }, (_, i) => ({
-        id: `d-${i}`,
-        row: String.fromCharCode(65 + Math.floor(i / 8)),
-        number: (i % 8) + 1,
-        isAvailable: Math.random() > 0.3,
-        x: 450 + (i % 8) * 25,
-        y: 350 + Math.floor(i / 8) * 25,
-      })),
-    },
-  ] : [];
+  // Get venue layout based on event type
+  const getVenueSections = (): Section[] => {
+    if (!event.hasReservedSeating) return [];
+    
+    switch (event.venueLayout) {
+      case "td-arena-court":
+        return getTDArenaCourtLayout();
+      case "td-arena-concert":
+        return getTDArenaConcertLayout();
+      case "theater":
+        return getTheaterLayout();
+      case "club":
+        return getClubLayout();
+      case "festival":
+        return getFestivalLayout();
+      default:
+        return getTDArenaCourtLayout();
+    }
+  };
+
+  const venueSections = getVenueSections();
+  const showStage = event.venueLayout !== "td-arena-court";
+  const isMaxCapacity = event.eventCategory === "Max Capacity";
 
   const handleSeatSelect = (sectionId: string, seatId: string) => {
     setSelectedSeats(prev => {
@@ -114,6 +86,12 @@ const EventDetail = () => {
   };
 
   const handleProceedToPayment = () => {
+    // Check if event is sold out (Max Capacity events)
+    if (isMaxCapacity && event.capacity && event.ticketsSold && event.ticketsSold >= event.capacity) {
+      toast.error("Sorry, this event is sold out");
+      return;
+    }
+
     if (event.hasReservedSeating && selectedSeats.length === 0) {
       toast.error("Please select at least one seat");
       return;
@@ -247,12 +225,19 @@ const EventDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Seating or General Admission */}
-            {event.hasReservedSeating ? (
+            {/* Seating, Capacity Display, or General Admission */}
+            {isMaxCapacity && event.capacity && event.ticketsSold !== undefined ? (
+              <CapacityDisplay
+                ticketsSold={event.ticketsSold}
+                capacity={event.capacity}
+                eventTitle={event.title}
+              />
+            ) : event.hasReservedSeating ? (
               <SeatingMap
                 sections={venueSections}
                 onSeatSelect={handleSeatSelect}
                 selectedSeats={selectedSeats}
+                showStage={showStage}
               />
             ) : (
               <GeneralAdmission
@@ -300,9 +285,14 @@ const EventDetail = () => {
                     size="lg" 
                     className="w-full"
                     onClick={handleProceedToPayment}
-                    disabled={event.hasReservedSeating ? selectedSeats.length === 0 : generalAdmissionCount === 0}
+                    disabled={
+                      (isMaxCapacity && event.capacity && event.ticketsSold && event.ticketsSold >= event.capacity) ||
+                      (event.hasReservedSeating ? selectedSeats.length === 0 : generalAdmissionCount === 0)
+                    }
                   >
-                    Proceed to Payment
+                    {isMaxCapacity && event.capacity && event.ticketsSold && event.ticketsSold >= event.capacity
+                      ? "Sold Out"
+                      : "Proceed to Payment"}
                   </Button>
                 </div>
 
