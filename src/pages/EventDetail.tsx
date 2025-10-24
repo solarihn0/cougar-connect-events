@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Clock, MapPin, Users, Heart } from "lucide-react";
 import { useState } from "react";
 import SeatingMap, { Section } from "@/components/SeatingMap";
+import TDArenaMap from "@/components/TDArenaMap";
 import GeneralAdmission from "@/components/GeneralAdmission";
 import CapacityDisplay from "@/components/CapacityDisplay";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ import {
   getClubLayout,
   getFestivalLayout,
 } from "@/lib/venueLayouts";
+import { getTDArenaLayout } from "@/lib/tdArenaLayout";
 
 const EventDetail = () => {
   const { id } = useParams();
@@ -60,8 +62,10 @@ const EventDetail = () => {
   };
 
   const venueSections = getVenueSections();
+  const tdArenaSections = event.eventCategory === "Big Arena" ? getTDArenaLayout() : [];
   const showStage = event.venueLayout !== "td-arena-court";
   const isMaxCapacity = event.eventCategory === "Max Capacity";
+  const isBigArena = event.eventCategory === "Big Arena";
 
   const handleSeatSelect = (sectionId: string, seatId: string) => {
     setSelectedSeats(prev => {
@@ -75,10 +79,18 @@ const EventDetail = () => {
 
   const calculateTotal = () => {
     if (event.hasReservedSeating) {
-      return selectedSeats.reduce((total, selected) => {
-        const section = venueSections.find(s => s.id === selected.sectionId);
-        return total + (section?.price || 0);
-      }, 0);
+      if (isBigArena) {
+        return selectedSeats.reduce((total, selected) => {
+          const section = tdArenaSections.find(s => s.id === selected.sectionId);
+          const seat = section?.seats.find(s => s.id === selected.seatId);
+          return total + (seat?.price || 0);
+        }, 0);
+      } else {
+        return selectedSeats.reduce((total, selected) => {
+          const section = venueSections.find(s => s.id === selected.sectionId);
+          return total + (section?.price || 0);
+        }, 0);
+      }
     } else {
       const basePrice = parseInt(event.price.replace("$", "") || "0");
       return basePrice * generalAdmissionCount;
@@ -104,8 +116,16 @@ const EventDetail = () => {
     // Generate tickets
     const newTickets = event.hasReservedSeating
       ? selectedSeats.map((selected, idx) => {
-          const section = venueSections.find(s => s.id === selected.sectionId);
-          const seat = section?.seats.find(s => s.id === selected.seatId);
+          let seatInfo = 'Reserved';
+          if (isBigArena) {
+            const section = tdArenaSections.find(s => s.id === selected.sectionId);
+            const seat = section?.seats.find(s => s.id === selected.seatId);
+            seatInfo = seat ? `${section?.displayNumber}, Row ${seat.row}, Seat ${seat.number}` : 'Reserved';
+          } else {
+            const section = venueSections.find(s => s.id === selected.sectionId);
+            const seat = section?.seats.find(s => s.id === selected.seatId);
+            seatInfo = seat ? `${section?.name}, Row ${seat.row}, Seat ${seat.number}` : 'Reserved';
+          }
           return {
             id: `${Date.now()}-${idx}`,
             eventId: event.id,
@@ -113,7 +133,7 @@ const EventDetail = () => {
             date: event.date,
             time: event.time,
             location: event.location,
-            seatNumber: seat ? `${section?.name}, Row ${seat.row}, Seat ${seat.number}` : 'Reserved',
+            seatNumber: seatInfo,
             qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TICKET-${event.id}-${selected.seatId}-${Date.now()}`,
             purchaseDate: new Date().toISOString(),
           };
@@ -231,6 +251,13 @@ const EventDetail = () => {
                 ticketsSold={event.ticketsSold}
                 capacity={event.capacity}
                 eventTitle={event.title}
+              />
+            ) : isBigArena ? (
+              <TDArenaMap
+                sections={tdArenaSections}
+                onSeatSelect={handleSeatSelect}
+                selectedSeats={selectedSeats}
+                maxSeats={10}
               />
             ) : event.hasReservedSeating ? (
               <SeatingMap
