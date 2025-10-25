@@ -43,6 +43,7 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
   const [hoveredSeat, setHoveredSeat] = useState<{ sectionId: string; seatId: string } | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [seatType, setSeatType] = useState<"all" | "standard" | "premium" | "student">("all");
+  const [isLoadingSeats, setIsLoadingSeats] = useState(false);
   
   const svgRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -71,8 +72,9 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
   };
 
   const getSeatColor = (sectionId: string, seat: ArenaSeat) => {
-    if (!seat.isAvailable) return "fill-muted stroke-muted-foreground/20";
-    if (isSeatSelected(sectionId, seat.id)) return "fill-secondary stroke-secondary-foreground";
+    // Color scheme: Free = green, Selected = yellow, Sold = grey
+    if (!seat.isAvailable) return "fill-muted/60 stroke-muted-foreground/20 cursor-not-allowed";
+    if (isSeatSelected(sectionId, seat.id)) return "fill-yellow-400 stroke-yellow-600";
     return "fill-green-500 stroke-green-700";
   };
 
@@ -85,12 +87,15 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
   };
 
   const handleSectionClick = (sectionId: string) => {
+    setIsLoadingSeats(true);
     setSelectedSection(sectionId);
     const section = sections.find(s => s.id === sectionId);
     if (section) {
-      setZoom(2.5);
-      setPan({ x: -section.position.x * 1.5, y: -section.position.y * 1.5 });
+      setZoom(3);
+      setPan({ x: -section.position.x * 2, y: -section.position.y * 2 });
     }
+    // Simulate loading for smooth transition
+    setTimeout(() => setIsLoadingSeats(false), 150);
   };
 
   const resetView = () => {
@@ -195,19 +200,19 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
             </Button>
           </div>
 
-          {/* Legend */}
+          {/* Legend - Fixed color scheme: Free = green, Selected = yellow, Sold = grey */}
           <div className="flex flex-wrap gap-4 pt-4 border-t">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-green-500 border border-green-700"></div>
-              <span className="text-sm">Available</span>
+              <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-700"></div>
+              <span className="text-sm font-medium">Free</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-secondary border border-secondary-foreground"></div>
-              <span className="text-sm">Selected</span>
+              <div className="w-4 h-4 rounded-full bg-yellow-400 border-2 border-yellow-600"></div>
+              <span className="text-sm font-medium">Selected</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-muted border border-muted-foreground/20"></div>
-              <span className="text-sm">Sold</span>
+              <div className="w-4 h-4 rounded-full bg-muted/60 border-2 border-muted-foreground/20"></div>
+              <span className="text-sm font-medium">Sold</span>
             </div>
           </div>
         </CardContent>
@@ -234,21 +239,39 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
                 transition: isDragging ? "none" : "transform 0.3s ease-out"
               }}
             >
-              {/* Court */}
+              {/* Court - 15% larger, realistic basketball court (94ft x 50ft ratio = 1.88:1) */}
+              <defs>
+                <pattern id="courtTexture" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <rect width="20" height="20" fill="hsl(30 30% 45%)" />
+                  <line x1="0" y1="10" x2="20" y2="10" stroke="hsl(30 25% 40%)" strokeWidth="0.5" />
+                </pattern>
+              </defs>
               <rect
-                x="350"
-                y="300"
-                width="300"
-                height="200"
-                fill="hsl(var(--primary)/0.1)"
+                x="310"
+                y="270"
+                width="380"
+                height="260"
+                fill="url(#courtTexture)"
                 stroke="hsl(var(--primary))"
                 strokeWidth="4"
-                rx="8"
+                rx="6"
               />
-              <line x1="500" y1="300" x2="500" y2="500" stroke="hsl(var(--primary))" strokeWidth="3" />
-              <circle cx="500" cy="400" r="60" fill="none" stroke="hsl(var(--primary))" strokeWidth="3" />
-              <text x="500" y="410" textAnchor="middle" fill="hsl(var(--primary))" fontSize="24" fontWeight="bold">
-                COURT
+              {/* Center court circle */}
+              <circle cx="500" cy="400" r="60" fill="none" stroke="white" strokeWidth="3" />
+              <line x1="500" y1="270" x2="500" y2="530" stroke="white" strokeWidth="3" />
+              
+              {/* College of Charleston "C" logo at center */}
+              <circle cx="500" cy="400" r="35" fill="hsl(var(--primary))" stroke="white" strokeWidth="3" />
+              <text x="500" y="420" textAnchor="middle" fill="white" fontSize="48" fontWeight="bold" fontFamily="serif">
+                C
+              </text>
+              
+              {/* Baseline text labels */}
+              <text x="500" y="290" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" letterSpacing="3">
+                CHARLESTON
+              </text>
+              <text x="500" y="520" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" letterSpacing="3">
+                COUGARS
               </text>
 
               {/* Sections */}
@@ -295,22 +318,22 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
                       ${section.basePrice}{section.maxPrice ? `-$${section.maxPrice}` : ''}
                     </text>
                     
-                    {/* Hover Tooltip */}
+                    {/* Hover Tooltip with availability */}
                     {isHovered && (
                       <g>
                         <rect
                           x={section.position.x + 85}
-                          y={section.position.y + 10}
-                          width="100"
-                          height="40"
+                          y={section.position.y + 5}
+                          width="140"
+                          height="50"
                           fill="hsl(var(--popover))"
                           stroke="hsl(var(--border))"
                           strokeWidth="1"
                           rx="4"
                         />
                         <text
-                          x={section.position.x + 135}
-                          y={section.position.y + 28}
+                          x={section.position.x + 155}
+                          y={section.position.y + 22}
                           textAnchor="middle"
                           fill="hsl(var(--popover-foreground))"
                           fontSize="12"
@@ -319,13 +342,23 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
                           {section.name}
                         </text>
                         <text
-                          x={section.position.x + 135}
-                          y={section.position.y + 42}
+                          x={section.position.x + 155}
+                          y={section.position.y + 36}
+                          textAnchor="middle"
+                          fill="hsl(var(--primary))"
+                          fontSize="11"
+                          fontWeight="bold"
+                        >
+                          ${section.basePrice}{section.maxPrice && section.maxPrice !== section.basePrice ? `-$${section.maxPrice}` : ''}
+                        </text>
+                        <text
+                          x={section.position.x + 155}
+                          y={section.position.y + 48}
                           textAnchor="middle"
                           fill="hsl(var(--muted-foreground))"
-                          fontSize="11"
+                          fontSize="10"
                         >
-                          Click to select
+                          {section.seats.filter(s => s.isAvailable).length}/{section.seats.length} available
                         </text>
                       </g>
                     )}
@@ -357,8 +390,15 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
                       {section.name} - ${section.basePrice}{section.maxPrice ? `-$${section.maxPrice}` : ''}
                     </text>
 
+                    {/* Loading indicator */}
+                    {isLoadingSeats && (
+                      <text x="500" y="400" textAnchor="middle" fontSize="16" fill="hsl(var(--muted-foreground))">
+                        Loading seats...
+                      </text>
+                    )}
+
                     {/* Seats */}
-                    {section.seats.map((seat) => {
+                    {!isLoadingSeats && section.seats.map((seat) => {
                       const isSelected = isSeatSelected(section.id, seat.id);
                       const isHovered = hoveredSeat?.sectionId === section.id && hoveredSeat?.seatId === seat.id;
                       
@@ -370,9 +410,9 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
                             r="12"
                             className={cn(
                               getSeatColor(section.id, seat),
-                              seat.isAvailable && "cursor-pointer hover:opacity-80"
+                              seat.isAvailable && "cursor-pointer hover:opacity-90 transition-opacity"
                             )}
-                            strokeWidth="2"
+                            strokeWidth="1.5"
                             onClick={() => handleSeatClick(section.id, seat.id, seat.isAvailable, seat.price)}
                             onMouseEnter={() => setHoveredSeat({ sectionId: section.id, seatId: seat.id })}
                             onMouseLeave={() => setHoveredSeat(null)}
@@ -383,42 +423,53 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
                               y={seat.y + 204}
                               textAnchor="middle"
                               fontSize="10"
-                              fill="hsl(var(--secondary-foreground))"
+                              fill="hsl(30 10% 20%)"
+                              fontWeight="bold"
                               pointerEvents="none"
                             >
                               ✓
                             </text>
                           )}
                           
-                          {/* Seat Tooltip */}
+                          {/* Seat Tooltip - positioned to avoid obscuring neighbors */}
                           {isHovered && seat.isAvailable && (
                             <g pointerEvents="none">
                               <rect
                                 x={seat.x + 265}
-                                y={seat.y + 180}
-                                width="100"
-                                height="50"
+                                y={seat.y + 175}
+                                width="110"
+                                height="60"
                                 fill="hsl(var(--popover))"
                                 stroke="hsl(var(--border))"
                                 strokeWidth="1"
                                 rx="4"
+                                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
                               />
                               <text
-                                x={seat.x + 315}
-                                y={seat.y + 200}
+                                x={seat.x + 320}
+                                y={seat.y + 195}
                                 textAnchor="middle"
                                 fill="hsl(var(--popover-foreground))"
                                 fontSize="11"
                                 fontWeight="bold"
                               >
+                                {section.displayNumber}
+                              </text>
+                              <text
+                                x={seat.x + 320}
+                                y={seat.y + 210}
+                                textAnchor="middle"
+                                fill="hsl(var(--muted-foreground))"
+                                fontSize="10"
+                              >
                                 Row {seat.row}, Seat {seat.number}
                               </text>
                               <text
-                                x={seat.x + 315}
-                                y={seat.y + 218}
+                                x={seat.x + 320}
+                                y={seat.y + 226}
                                 textAnchor="middle"
                                 fill="hsl(var(--primary))"
-                                fontSize="12"
+                                fontSize="13"
                                 fontWeight="bold"
                               >
                                 ${seat.price}
@@ -429,13 +480,15 @@ const TDArenaMap = ({ sections, onSeatSelect, selectedSeats, maxSeats = 10 }: TD
                       );
                     })}
 
-                    {/* Close Button */}
+                    {/* Back to All Sections Button */}
                     <g
                       className="cursor-pointer"
                       onClick={resetView}
                     >
-                      <circle cx="760" cy="140" r="20" fill="hsl(var(--destructive))" />
-                      <text x="760" y="146" textAnchor="middle" fill="white" fontSize="20">×</text>
+                      <rect x="210" y="670" width="180" height="40" fill="hsl(var(--primary))" rx="6" />
+                      <text x="300" y="695" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
+                        ← Back to All Sections
+                      </text>
                     </g>
                   </g>
                 );

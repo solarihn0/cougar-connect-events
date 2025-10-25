@@ -19,10 +19,14 @@ const GeneralAdmission = ({
   maxTickets = 10,
   availableTickets = 100,
   capacity,
-  ticketsSold,
+  ticketsSold = 0,
 }: GeneralAdmissionProps) => {
+  const remainingCapacity = capacity ? capacity - ticketsSold : availableTickets;
+  const effectiveMax = Math.min(maxTickets, remainingCapacity);
+  const isSoldOut = capacity ? ticketsSold >= capacity : false;
+
   const handleIncrease = () => {
-    if (ticketCount < maxTickets && ticketCount < availableTickets) {
+    if (ticketCount < effectiveMax) {
       onTicketCountChange(ticketCount + 1);
     }
   };
@@ -34,6 +38,8 @@ const GeneralAdmission = ({
   };
 
   const totalPrice = price * ticketCount;
+  const serviceFee = 2.50;
+  const fees = ticketCount > 0 ? serviceFee : 0;
 
   return (
     <Card>
@@ -53,10 +59,22 @@ const GeneralAdmission = ({
             <p className="text-2xl font-bold text-primary">${price}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">Available</p>
-            <p className="font-semibold">{availableTickets} tickets</p>
+            <p className="text-sm text-muted-foreground">
+              {isSoldOut ? "Sold Out" : "Remaining"}
+            </p>
+            <p className={`font-semibold ${isSoldOut ? "text-destructive" : ""}`}>
+              {isSoldOut ? "0 tickets" : `${remainingCapacity} tickets`}
+            </p>
           </div>
         </div>
+
+        {ticketCount > remainingCapacity && !isSoldOut && (
+          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-sm text-destructive font-medium">
+              Only {remainingCapacity} ticket{remainingCapacity !== 1 ? 's' : ''} remaining
+            </p>
+          </div>
+        )}
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -77,7 +95,7 @@ const GeneralAdmission = ({
                 variant="outline"
                 size="icon"
                 onClick={handleIncrease}
-                disabled={ticketCount >= maxTickets || ticketCount >= availableTickets}
+                disabled={ticketCount >= effectiveMax || isSoldOut}
               >
                 <Plus className="w-4 h-4" />
               </Button>
@@ -85,27 +103,37 @@ const GeneralAdmission = ({
           </div>
 
           {ticketCount > 0 && (
-            <div className="pt-4 border-t">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-semibold">${totalPrice}</span>
+            <div className="pt-4 border-t space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Subtotal ({ticketCount} ticket{ticketCount !== 1 ? 's' : ''})</span>
+                <span className="font-semibold">${totalPrice.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Service Fee</span>
-                <span className="font-semibold">$2.50</span>
+                <span className="font-semibold">${serviceFee.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground text-xs">Est. Taxes</span>
+                <span className="text-sm">${(totalPrice * 0.08).toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t">
-                <span className="font-bold">Total</span>
+                <span className="font-bold text-lg">Total</span>
                 <span className="font-bold text-2xl text-primary">
-                  ${(totalPrice + 2.5).toFixed(2)}
+                  ${(totalPrice + fees + totalPrice * 0.08).toFixed(2)}
                 </span>
               </div>
             </div>
           )}
 
-          {ticketCount >= maxTickets && (
-            <p className="text-sm text-destructive">
+          {ticketCount >= maxTickets && !isSoldOut && (
+            <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
               Maximum {maxTickets} tickets per order
+            </p>
+          )}
+
+          {isSoldOut && (
+            <p className="text-sm text-destructive font-bold text-center p-3 bg-destructive/10 rounded-lg">
+              This event is sold out
             </p>
           )}
         </div>
