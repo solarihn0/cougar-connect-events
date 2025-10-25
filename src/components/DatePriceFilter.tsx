@@ -66,8 +66,20 @@ const DatePriceFilter = ({
                   }
                 }}
                 numberOfMonths={2}
-                disabled={(date) => date < new Date()}
+                disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
               />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Quick picks:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" onClick={() => onDateRangeChange({ from: new Date(), to: new Date() })}>Today</Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  const today = new Date();
+                  const nextWeek = new Date(today);
+                  nextWeek.setDate(today.getDate() + 7);
+                  onDateRangeChange({ from: today, to: nextWeek });
+                }}>Next 7 Days</Button>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button

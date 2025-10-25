@@ -117,37 +117,64 @@ const EventDetail = () => {
     const newTickets = event.hasReservedSeating
       ? selectedSeats.map((selected, idx) => {
           let seatInfo = 'Reserved';
+          let section = '';
+          let row = '';
+          let seat = '';
+          let price = 0;
+          
           if (isBigArena) {
-            const section = tdArenaSections.find(s => s.id === selected.sectionId);
-            const seat = section?.seats.find(s => s.id === selected.seatId);
-            seatInfo = seat ? `${section?.displayNumber}, Row ${seat.row}, Seat ${seat.number}` : 'Reserved';
+            const sectionData = tdArenaSections.find(s => s.id === selected.sectionId);
+            const seatData = sectionData?.seats.find(s => s.id === selected.seatId);
+            if (seatData && sectionData) {
+              section = sectionData.displayNumber;
+              row = seatData.row;
+              seat = seatData.number.toString();
+              price = seatData.price;
+              seatInfo = `${section} • ${row} • ${seat}`;
+            }
           } else {
-            const section = venueSections.find(s => s.id === selected.sectionId);
-            const seat = section?.seats.find(s => s.id === selected.seatId);
-            seatInfo = seat ? `${section?.name}, Row ${seat.row}, Seat ${seat.number}` : 'Reserved';
+            const sectionData = venueSections.find(s => s.id === selected.sectionId);
+            const seatData = sectionData?.seats.find(s => s.id === selected.seatId);
+            if (seatData && sectionData) {
+              section = sectionData.name;
+              row = seatData.row;
+              seat = seatData.number.toString();
+              price = sectionData.price;
+              seatInfo = `${section}, Row ${row}, Seat ${seat}`;
+            }
           }
+          
           return {
             id: `${Date.now()}-${idx}`,
             eventId: event.id,
             eventTitle: event.title,
+            eventCategory: event.eventCategory,
             date: event.date,
             time: event.time,
             location: event.location,
             seatNumber: seatInfo,
+            section,
+            row,
+            seat,
+            price,
             qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TICKET-${event.id}-${selected.seatId}-${Date.now()}`,
             purchaseDate: new Date().toISOString(),
+            status: 'purchased' as const,
           };
         })
       : [{
           id: `${Date.now()}`,
           eventId: event.id,
           eventTitle: event.title,
+          eventCategory: event.eventCategory,
           date: event.date,
           time: event.time,
           location: event.location,
           quantity: generalAdmissionCount,
+          price: parseInt(event.price.replace("$", "") || "0"),
           qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TICKET-${event.id}-GA-${Date.now()}`,
           purchaseDate: new Date().toISOString(),
+          status: 'purchased' as const,
         }];
 
     addTickets(newTickets);

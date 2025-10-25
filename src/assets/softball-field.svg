@@ -1,0 +1,35 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outfield -->
+  <path d="M 200 340 Q 90 270, 90 150 Q 90 90, 150 90 Q 250 90, 250 90 Q 310 90, 310 150 Q 310 270, 200 340 Z" fill="#2d5016" stroke="#8b7355" stroke-width="2"/>
+  
+  <!-- Infield dirt (larger circle for softball) -->
+  <circle cx="200" cy="230" r="75" fill="#d4a76a" stroke="#8b7355" stroke-width="2"/>
+  
+  <!-- Pitcher's circle -->
+  <circle cx="200" cy="230" r="16" fill="none" stroke="#8b7355" stroke-width="2"/>
+  <circle cx="200" cy="230" r="4" fill="#8b7355"/>
+  
+  <!-- Bases (60-ft basepaths = closer than baseball) -->
+  <rect x="195" y="285" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 200 290)"/>
+  <rect x="145" y="225" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 150 230)"/>
+  <rect x="195" y="165" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 200 170)"/>
+  <rect x="245" y="225" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 250 230)"/>
+  
+  <!-- Home plate -->
+  <polygon points="200,295 195,290 195,285 205,285 205,290" fill="white" stroke="#333" stroke-width="1"/>
+  
+  <!-- Foul lines -->
+  <line x1="200" y1="290" x2="90" y2="360" stroke="white" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="200" y1="290" x2="310" y2="360" stroke="white" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Batter's boxes -->
+  <rect x="185" y="295" width="6" height="12" fill="none" stroke="white" stroke-width="1"/>
+  <rect x="209" y="295" width="6" height="12" fill="none" stroke="white" stroke-width="1"/>
+  
+  <!-- Outfield fence (closer than baseball, 200-220 ft) -->
+  <path d="M 110 330 Q 200 365, 290 330" fill="none" stroke="#8b7355" stroke-width="3"/>
+  
+  <!-- Softball accents (yellow dots) -->
+  <circle cx="180" cy="210" r="3" fill="#FFD700"/>
+  <circle cx="220" cy="250" r="3" fill="#FFD700"/>
+</svg>

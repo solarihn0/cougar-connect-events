@@ -1,8 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, MapPin, QrCode, TicketX } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, TicketX } from "lucide-react";
 import { useTickets } from "@/context/TicketContext";
+import TicketIcon from "@/components/TicketIcon";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const MyTickets = () => {
   const navigate = useNavigate();
@@ -30,55 +39,64 @@ const MyTickets = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {tickets.length > 0 ? (
-          <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {tickets.map((ticket) => (
-              <Card key={ticket.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-                  <CardTitle className="text-xl">{ticket.eventTitle}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <Calendar className="w-5 h-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-semibold">Date & Time</p>
-                          <p className="text-muted-foreground">
-                            {ticket.date} at {ticket.time}
-                          </p>
+              <Dialog key={ticket.id}>
+                <DialogTrigger asChild>
+                  <Card className="cursor-pointer hover:shadow-xl transition-shadow">
+                    <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg mb-1">{ticket.eventTitle}</CardTitle>
+                          <Badge variant="secondary" className="mt-1">
+                            {ticket.eventCategory}
+                          </Badge>
                         </div>
+                        <TicketIcon 
+                          eventCategory={ticket.eventCategory}
+                          status={ticket.status}
+                          section={ticket.section}
+                          row={ticket.row}
+                          seat={ticket.seat}
+                          quantity={ticket.quantity}
+                          size="md"
+                        />
                       </div>
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-semibold">Location</p>
-                          <p className="text-muted-foreground">{ticket.location}</p>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span>{ticket.date} at {ticket.time}</span>
                         </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{ticket.location}</span>
+                        </div>
+                        {ticket.seatNumber && (
+                          <div className="text-sm font-semibold pt-2">
+                            {ticket.seatNumber}
+                          </div>
+                        )}
+                        {ticket.quantity && (
+                          <div className="text-sm font-semibold pt-2">
+                            {ticket.quantity} General Admission Ticket{ticket.quantity > 1 ? 's' : ''}
+                          </div>
+                        )}
                       </div>
-                      {ticket.seatNumber && (
-                        <div className="flex items-start gap-3">
-                          <QrCode className="w-5 h-5 text-primary mt-0.5" />
-                          <div>
-                            <p className="font-semibold">Seat</p>
-                            <p className="text-muted-foreground">{ticket.seatNumber}</p>
-                          </div>
-                        </div>
-                      )}
-                      {ticket.quantity && (
-                        <div className="flex items-start gap-3">
-                          <QrCode className="w-5 h-5 text-primary mt-0.5" />
-                          <div>
-                            <p className="font-semibold">Quantity</p>
-                            <p className="text-muted-foreground">{ticket.quantity} ticket(s)</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    </CardContent>
+                  </Card>
+                </DialogTrigger>
 
-                    <div className="flex flex-col items-center justify-center bg-muted rounded-lg p-6">
-                      <p className="text-sm font-semibold mb-3 text-center">
-                        Scan at Entry
-                      </p>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>{ticket.eventTitle}</DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6">
+                    {/* QR Code */}
+                    <div className="flex flex-col items-center bg-muted rounded-lg p-6">
+                      <p className="text-sm font-semibold mb-3">Scan at Entry</p>
                       <img
                         src={ticket.qrCode}
                         alt="Ticket QR Code"
@@ -88,9 +106,49 @@ const MyTickets = () => {
                         Ticket ID: {ticket.id}
                       </p>
                     </div>
+
+                    {/* Event Details */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold">Date & Time</p>
+                        <p className="text-muted-foreground">{ticket.date} at {ticket.time}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Location</p>
+                        <p className="text-muted-foreground">{ticket.location}</p>
+                      </div>
+                      {ticket.seatNumber && (
+                        <div>
+                          <p className="text-sm font-semibold">Seat Information</p>
+                          <p className="text-muted-foreground">{ticket.seatNumber}</p>
+                        </div>
+                      )}
+                      {ticket.quantity && (
+                        <div>
+                          <p className="text-sm font-semibold">Quantity</p>
+                          <p className="text-muted-foreground">{ticket.quantity} ticket(s)</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold">Total Paid</p>
+                        <p className="text-lg font-bold text-primary">
+                          ${ticket.quantity ? (ticket.price * ticket.quantity).toFixed(2) : ticket.price.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" size="sm">
+                        View Venue Map
+                      </Button>
+                      <Button variant="outline" className="flex-1" size="sm">
+                        Transfer
+                      </Button>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </DialogContent>
+              </Dialog>
             ))}
           </div>
         ) : (
@@ -99,7 +157,7 @@ const MyTickets = () => {
               <TicketX className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-xl font-semibold mb-2">No Tickets Yet</h3>
               <p className="text-muted-foreground mb-6">Start exploring events and purchase your first ticket!</p>
-              <Button variant="gold" onClick={() => navigate("/")}>
+              <Button onClick={() => navigate("/")}>
                 Browse Events
               </Button>
             </CardContent>

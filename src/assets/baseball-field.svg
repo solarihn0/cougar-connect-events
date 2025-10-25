@@ -1,0 +1,31 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outfield -->
+  <path d="M 200 340 Q 80 260, 80 140 Q 80 80, 140 80 Q 260 80, 260 80 Q 320 80, 320 140 Q 320 260, 200 340 Z" fill="#2d5016" stroke="#8b7355" stroke-width="2"/>
+  
+  <!-- Infield dirt -->
+  <path d="M 200 280 L 140 220 L 200 160 L 260 220 Z" fill="#d4a76a" stroke="#8b7355" stroke-width="2"/>
+  
+  <!-- Pitcher's mound -->
+  <circle cx="200" cy="220" r="12" fill="#d4a76a" stroke="#8b7355" stroke-width="1.5"/>
+  <circle cx="200" cy="220" r="3" fill="#8b7355"/>
+  
+  <!-- Bases -->
+  <rect x="195" y="275" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 200 280)"/>
+  <rect x="135" y="215" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 140 220)"/>
+  <rect x="195" y="155" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 200 160)"/>
+  <rect x="255" y="215" width="10" height="10" fill="white" stroke="#333" stroke-width="1" transform="rotate(45 260 220)"/>
+  
+  <!-- Home plate -->
+  <polygon points="200,285 195,280 195,275 205,275 205,280" fill="white" stroke="#333" stroke-width="1"/>
+  
+  <!-- Foul lines -->
+  <line x1="200" y1="280" x2="80" y2="360" stroke="white" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="200" y1="280" x2="320" y2="360" stroke="white" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Batter's boxes -->
+  <rect x="185" y="285" width="6" height="12" fill="none" stroke="white" stroke-width="1"/>
+  <rect x="209" y="285" width="6" height="12" fill="none" stroke="white" stroke-width="1"/>
+  
+  <!-- Outfield fence arc -->
+  <path d="M 100 330 Q 200 380, 300 330" fill="none" stroke="#8b7355" stroke-width="3"/>
+</svg>

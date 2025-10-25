@@ -4,13 +4,19 @@ export interface Ticket {
   id: string;
   eventId: string;
   eventTitle: string;
+  eventCategory: 'Big Arena' | 'Selected Seats' | 'Max Capacity';
   date: string;
   time: string;
   location: string;
-  seatNumber?: string;
+  seatNumber?: string; // Format: "Section • Row • Seat" (e.g., "205 • F • 12")
+  section?: string;
+  row?: string;
+  seat?: string;
   quantity?: number;
+  price: number;
   qrCode: string;
   purchaseDate: string;
+  status: 'selected' | 'purchased' | 'refunded'; // yellow, green, grey
 }
 
 interface TicketContextType {

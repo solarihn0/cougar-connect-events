@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import EventDetail from "./pages/EventDetail";
 import MyTickets from "./pages/MyTickets";
 import Settings from "./pages/Settings";
+import PaymentSettings from "./pages/PaymentSettings";
 import NotFound from "./pages/NotFound";
 import { TicketProvider } from "./context/TicketContext";
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/event/:id" element={<EventDetail />} />
             <Route path="/my-tickets" element={<MyTickets />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/payment-settings" element={<PaymentSettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

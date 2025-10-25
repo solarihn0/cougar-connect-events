@@ -39,6 +39,9 @@ const Settings = () => {
             <CardDescription>Manage your profile and preferences</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/payment-settings")}>
+              Payment Methods
+            </Button>
             <Button variant="outline" className="w-full justify-start">
               Edit Profile
             </Button>
