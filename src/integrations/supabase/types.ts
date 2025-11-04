@@ -14,7 +14,250 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          capacity_max: number
+          category: Database["public"]["Enums"]["event_category"]
+          created_at: string | null
+          date: string
+          description: string | null
+          has_reserved_seating: boolean | null
+          id: string
+          image_url: string | null
+          location: string
+          max_tickets_per_purchase: number | null
+          tickets_sold: number
+          time: string
+          title: string
+          updated_at: string | null
+          venue_layout: string | null
+        }
+        Insert: {
+          capacity_max?: number
+          category: Database["public"]["Enums"]["event_category"]
+          created_at?: string | null
+          date: string
+          description?: string | null
+          has_reserved_seating?: boolean | null
+          id?: string
+          image_url?: string | null
+          location: string
+          max_tickets_per_purchase?: number | null
+          tickets_sold?: number
+          time: string
+          title: string
+          updated_at?: string | null
+          venue_layout?: string | null
+        }
+        Update: {
+          capacity_max?: number
+          category?: Database["public"]["Enums"]["event_category"]
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          has_reserved_seating?: boolean | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          max_tickets_per_purchase?: number | null
+          tickets_sold?: number
+          time?: string
+          title?: string
+          updated_at?: string | null
+          venue_layout?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          billing_zip: string | null
+          card_brand: string
+          cardholder_name: string
+          created_at: string | null
+          expiry_month: string
+          expiry_year: string
+          id: string
+          is_default: boolean | null
+          last_four: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_zip?: string | null
+          card_brand: string
+          cardholder_name: string
+          created_at?: string | null
+          expiry_month: string
+          expiry_year: string
+          id?: string
+          is_default?: boolean | null
+          last_four: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_zip?: string | null
+          card_brand?: string
+          cardholder_name?: string
+          created_at?: string | null
+          expiry_month?: string
+          expiry_year?: string
+          id?: string
+          is_default?: boolean | null
+          last_four?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_tiers: {
+        Row: {
+          available_seats: number
+          created_at: string | null
+          event_id: string
+          id: string
+          price: number
+          section: string
+        }
+        Insert: {
+          available_seats?: number
+          created_at?: string | null
+          event_id: string
+          id?: string
+          price: number
+          section: string
+        }
+        Update: {
+          available_seats?: number
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          price?: number
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_tiers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          created_at: string | null
+          date: string
+          event_category: Database["public"]["Enums"]["event_category"]
+          event_id: string
+          event_title: string
+          id: string
+          location: string
+          price: number
+          purchase_date: string | null
+          qr_code: string
+          quantity: number | null
+          row: string | null
+          seat: string | null
+          seat_number: string | null
+          section: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          time: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          event_category: Database["public"]["Enums"]["event_category"]
+          event_id: string
+          event_title: string
+          id?: string
+          location: string
+          price: number
+          purchase_date?: string | null
+          qr_code: string
+          quantity?: number | null
+          row?: string | null
+          seat?: string | null
+          seat_number?: string | null
+          section?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          time: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          event_category?: Database["public"]["Enums"]["event_category"]
+          event_id?: string
+          event_title?: string
+          id?: string
+          location?: string
+          price?: number
+          purchase_date?: string | null
+          qr_code?: string
+          quantity?: number | null
+          row?: string | null
+          seat?: string | null
+          seat_number?: string | null
+          section?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          time?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +266,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      event_category: "Big Arena" | "Selected Seats" | "Max Capacity"
+      ticket_status: "selected" | "purchased" | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +394,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      event_category: ["Big Arena", "Selected Seats", "Max Capacity"],
+      ticket_status: ["selected", "purchased", "refunded"],
+    },
   },
 } as const
