@@ -23,6 +23,11 @@ npm run test:ui
 - ✅ `src/lib/__tests__/dateHelpers.test.ts` - Date helper tests (13 tests)
 - ✅ `src/components/__tests__/TicketIcon.test.tsx` - Component tests (12 tests)
 - ✅ `src/context/__tests__/TicketContext.test.tsx` - Context tests (7 tests)
+- ✅ `src/hooks/__tests__/useEvents.test.tsx` - Database event hooks (4 tests)
+- ✅ `src/hooks/__tests__/useTickets.test.tsx` - Database ticket hooks (4 tests)
+- ✅ `src/hooks/__tests__/usePayments.test.tsx` - Database payment hooks (3 tests)
+
+**Total: 55+ tests covering utilities, components, contexts, and database operations**
 
 ## Documentation
 
